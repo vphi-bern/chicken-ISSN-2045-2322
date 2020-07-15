@@ -1,0 +1,54 @@
+.btn-group{
+  margin-bottom:15px;
+}
+
+.table-condensed td{
+  vertical-align:middle!important;
+}
+
+[class*="col-"]{
+  padding-right:15px!important;
+  padding-left:15px!important;
+}
+
+.grid-pad [class*="col-"]{
+  padding:0!important;
+}
+
+.chickens-fix-column-padding{
+  padding-right:0!important;
+  padding-left:0!important;
+}
+
+.chickens-plot-height .highchart.html-widget{
+  height:300px!important;
+}
+
+.chickens-plot-height-short .highchart.html-widget{
+  height:262px!important;
+}
+
+.chickens-calheatmap-height .calheatmap{
+  height:auto!important;
+}
+
+.chickens-network-title{
+  font-family:"Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+  font-size:12px;
+  font-weight:normal;
+}
+
+.chickens-movements-heatmap thead tr th:first-child{
+  width:10px;
+}
+
+@media (max-width: 767px){
+
+}
+
+@media (max-width: 480px){
+  .table-condensed td:first-child, 
+  .table-condensed th:first-child,
+  .table-condensed td:last-child,
+  .table-condensed th:last-child{display:none;}
+}
