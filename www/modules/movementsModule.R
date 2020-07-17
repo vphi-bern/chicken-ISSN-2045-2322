@@ -90,7 +90,7 @@ movementsTabItem <- function(input, output, session) {
     
     movements <- total_changes_level_time_chickens(c(input$movementsChicken), daysSeqString, hoursSeqString)
     
-    formattable(movements, list('value' = color_bar("#A4BAE8"), title = FALSE), align = c('l', 'l', 'r'))
+    formattable(movements, list('value' = color_bar("#E0E0E0"), title = FALSE), align = c('l', 'l', 'r'), col.names = c("From", "To", "Movements"))
   })
   
   
@@ -148,7 +148,9 @@ movementsTabItem <- function(input, output, session) {
         summarize(count = n())
       
       if(input$movementsTypeGraph == 'column') {
-        hchart(totalMovementsData, "column", hcaes(x = hour, y = count, group = level), color = levelColorPalette[unique_levels_chicken_date(input$movementsChicken, x)]) %>%
+        # hchart(totalMovementsData, "column", hcaes(x = hour, y = count, group = level)) %>%
+        hchart(totalMovementsData, "column", hcaes(x = hour, y = count, group = level), color = levelColorPaletteSparkline[unique_levels_chicken_date(input$movementsChicken, x)]) %>%
+          # hc_colors(unname(levelColorPaletteSparkline)) %>%
           hc_chart(polar = isPolar) %>%
           hc_title(
             text = x,
@@ -355,7 +357,7 @@ movementsTabItem <- function(input, output, session) {
         summarize(count = n())
       
       if(input$movementsTypeGraph == 'column') {
-        hchart(totalMovementsData, "column", hcaes(x = hour, y = count, group = level), color = levelColorPalette[unique_levels_chicken_date(x, input$movementsDay)]) %>%
+        hchart(totalMovementsData, "column", hcaes(x = hour, y = count, group = level), color = levelColorPaletteSparkline[unique_levels_chicken_date(x, input$movementsDay)]) %>%
           hc_chart(polar = isPolar) %>%
           hc_title(
             text = chicken_names_c[[x]],
@@ -593,8 +595,8 @@ movementsTabItem <- function(input, output, session) {
           '3' = color_bar("#FFCC7F"),
           '4' = color_bar("#87CA8B"),
           '5' = color_bar("#B2D47F"),
-          'Total' = color_bar("#F1761C")
-        ), align = c('l', 'r', 'r', 'r', 'r', 'r', 'r'), table.attr = "class=\"table table-condensed chickens-movements-heatmap\"") %>%
+          'Total' = color_bar("#E0E0E0")
+        ), align = c('l', 'r', 'r', 'r', 'r', 'r', 'r'), col.names = c("Hour", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Total"), table.attr = "class=\"table table-condensed chickens-movements-heatmap\"") %>%
           htmltools::HTML() %>%
           div() %>%
           spk_add_deps()

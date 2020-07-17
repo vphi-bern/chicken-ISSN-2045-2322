@@ -27,11 +27,9 @@ timeSeriesTabItemUI <- function(id, title = "Time Series") {
         conditionalPanel(condition = sprintf("input['%s'] == 'byDay'", ns("tabBoxTimeSeries")),
           selectInput(ns("timeSeriesDay"), "Day", choices = uniqueDays$time, selected = uniqueDays$time[1]),
           uiOutput(ns("chickenToShowUI"))
-        )
-      ),
-      conditionalPanel(condition = sprintf("input['%s'] == 'byDay' || input['%s'] == 'byChicken'", ns("tabBoxTimeSeries"), ns("tabBoxTimeSeries")),
-        box(width = 3, title = "Graph",
-          switchInput(inputId = ns("graphOrdinal"), size = "mini", label = "Ordinal xaxis", offLabel = "No", onLabel = "Yes", value = TRUE)
+        ),
+        conditionalPanel(condition = sprintf("input['%s'] == 'byDay' || input['%s'] == 'byChicken'", ns("tabBoxTimeSeries"), ns("tabBoxTimeSeries")),
+          switchInput(inputId = ns("graphOrdinal"), size = "mini", label = "Ordinal xaxis", offLabel = "No", onLabel = "Yes", value = TRUE) 
         )
       ),
       conditionalPanel(condition = sprintf("input['%s'] == 'allDays'", ns("tabBoxTimeSeries")),
@@ -104,7 +102,8 @@ timeSeriesTabItem <- function(input, output, session) {
 
   output$dateToShowUI <- renderUI({
     req(input$timeSeriesChicken)
-    awesomeCheckboxGroup(inputId = ns("timeSerieDayToShow"), label = "Choose Date:",
+    pickerInput(inputId = ns("timeSerieDayToShow"), label = "Choose Date:", multiple = TRUE,
+      options = list('live-search' = TRUE, 'actions-box' = TRUE, title = "Select"),
       choices = unique_days_per_chicken(input$timeSeriesChicken),
       selected = unique_days_per_chicken(input$timeSeriesChicken)
     )
@@ -119,6 +118,10 @@ timeSeriesTabItem <- function(input, output, session) {
   ##########################################
   ##########################################
   output$chickenByChickenGraphUI <- renderUI({
+    
+    validate(
+      need(input$timeSerieDayToShow, 'Check at least one day!')
+    )
 
     cantGraphs <- length(input$timeSerieDayToShow)
     graphSize <- cantGraphs * 120
@@ -131,10 +134,6 @@ timeSeriesTabItem <- function(input, output, session) {
   })
 
   output$chickenByChickenGraph <- renderHighchart({
-
-    validate(
-      # need(input$timeSerieDayToShow, 'Check at least one day!')
-    )
 
     req(all(sort(input$timeSerieDayToShow) %in% unique_days_per_chicken(input$timeSeriesChicken)))
 
@@ -214,13 +213,18 @@ timeSeriesTabItem <- function(input, output, session) {
   ##########################################
   output$chickenToShowUI <- renderUI({
     req(input$timeSeriesDay)
-    awesomeCheckboxGroup(inputId = ns("timeSerieChickenToShow"), label = "Choose chicken:",
+    pickerInput(inputId = ns("timeSerieChickenToShow"), label = "Choose chicken:", multiple = TRUE,
+      options = list('live-search' = TRUE, 'actions-box' = TRUE, title = "Select"),
       choices = chicken_names[chicken_names_c[unique_chicken_per_day(input$timeSeriesDay)]],
       selected = chicken_names[chicken_names_c[unique_chicken_per_day(input$timeSeriesDay)]]
     )
   })
 
   output$chickenByDayGraphUI <- renderUI({
+    
+    validate(
+      need(input$timeSerieChickenToShow, 'Check at least one chicken!')
+    )
 
     cantGraphs <- length(input$timeSerieChickenToShow)
     graphSize <- cantGraphs * 120
@@ -233,10 +237,7 @@ timeSeriesTabItem <- function(input, output, session) {
   })
 
   output$chickenByDayGraph <- renderHighchart({
-    validate(
-      need(input$timeSerieChickenToShow, 'Check at least one chicken!')
-    )
-
+    
     req(all(sort(input$timeSerieChickenToShow) %in% unique_chicken_per_day(input$timeSeriesDay)))
 
     shinyjs::html("chickenByDayGraph", "Loading...")
@@ -380,6 +381,29 @@ timeSeriesTabItem <- function(input, output, session) {
             div() %>%
             spk_add_deps()
         ),
+        
+
+        box(width = 6, class = "chickens-plot-height",
+          hchart(boxPlotDataTotalTime, "column", hcaes(x = "day", y = "count", group = "level")) %>%
+            hc_chart(
+              height = 300
+            ) %>%
+            hc_xAxis(
+              title = list(text = ""),
+              labels = list(
+                formatter = JS("function(){return moment(this.value).format('DD-MM');}")
+              )
+            ) %>%
+            hc_legend(margin = 6) %>%
+            hc_yAxis(title = list(text = "Seconds")) %>%
+            hc_tooltip(
+              pointFormat = '<span style="color:{point.color}">\u25CF</span> Level {series.name}: <b>{point.y} sec</b><br/>'
+            ) %>%
+            hc_colors(unname(levelColorPaletteSparkline)) %>%
+            hc_plotOptions(
+              column = list(pointPadding = 0, groupPadding = 0)
+            )
+        ),
 
         box(width = 3,
           highchart(height = 300) %>%
@@ -438,27 +462,6 @@ timeSeriesTabItem <- function(input, output, session) {
               maxPadding = 0,
               startOnTick = TRUE,
               endOnTick = FALSE
-            )
-        ),
-        box(width = 6, class = "chickens-plot-height",
-          hchart(boxPlotDataTotalTime, "column", hcaes(x = "day", y = "count", group = "level")) %>%
-            hc_chart(
-              height = 300
-            ) %>%
-            hc_xAxis(
-              title = list(text = ""),
-              labels = list(
-                formatter = JS("function(){return moment(this.value).format('DD-MM');}")
-              )
-            ) %>%
-            hc_legend(margin = 6) %>%
-            hc_yAxis(title = list(text = "")) %>%
-            hc_tooltip(
-              pointFormat = '<span style="color:{point.color}">\u25CF</span> Level {series.name}: <b>{point.y} sec</b><br/>'
-            ) %>%
-            hc_colors(unname(levelColorPaletteSparkline)) %>%
-            hc_plotOptions(
-              column = list(pointPadding = 0, groupPadding = 0)
             )
         )
       )
@@ -538,6 +541,7 @@ timeSeriesTabItem <- function(input, output, session) {
       mutate(title = sprintf("From: %s, to: %s<br />%s mov", from, to, value))
 
     edges <- edges[order(edges$to),]
+    row.names(edges) <- NULL
     edges_internalGraph <- edges[,c("to", "value")] %>%
       group_by(to) %>%
       summarize(total = sum(value))
@@ -555,6 +559,28 @@ timeSeriesTabItem <- function(input, output, session) {
           htmltools::HTML() %>%
           div() %>%
           spk_add_deps()
+        ),
+        
+        box(width = 6, class = "chickens-plot-height",
+          hchart(boxPlotDataMovements, "column", hcaes(x = "day", y = "count", group = "level")) %>%
+            hc_chart(
+              height = 300
+            ) %>%
+            hc_xAxis(
+              title = list(text = ""),
+              labels = list(
+                formatter = JS("function(){return moment(this.value).format('DD-MM');}")
+              )
+            ) %>%
+            hc_tooltip(
+              pointFormat = '<span style="color:{point.color}">\u25CF</span> Level {series.name}: <b>{point.y} mov</b><br/>'
+            ) %>%
+            hc_legend(margin = 6) %>%
+            hc_yAxis(title = list(text = "Movements")) %>%
+            hc_colors(unname(levelColorPaletteSparkline)) %>%
+            hc_plotOptions(
+              column = list(pointPadding = 0, groupPadding = 0)
+            )
         ),
 
         box(width = 3,
@@ -618,27 +644,6 @@ timeSeriesTabItem <- function(input, output, session) {
             )
         ),
 
-        box(width = 6, class = "chickens-plot-height",
-          hchart(boxPlotDataMovements, "column", hcaes(x = "day", y = "count", group = "level")) %>%
-            hc_chart(
-              height = 300
-            ) %>%
-            hc_xAxis(
-              title = list(text = ""),
-              labels = list(
-                formatter = JS("function(){return moment(this.value).format('DD-MM');}")
-              )
-            ) %>%
-            hc_tooltip(
-              pointFormat = '<span style="color:{point.color}">\u25CF</span> Level {series.name}: <b>{point.y} mov</b><br/>'
-            ) %>%
-            hc_legend(margin = 6) %>%
-            hc_yAxis(title = list(text = "")) %>%
-            hc_colors(unname(levelColorPaletteSparkline)) %>%
-            hc_plotOptions(
-              column = list(pointPadding = 0, groupPadding = 0)
-            )
-        ),
 
         box(width = 4,
           visNetwork(nodes, edges, height = "280px", width = "100%") %>%
@@ -694,10 +699,9 @@ timeSeriesTabItem <- function(input, output, session) {
         ),
 
         box(width = 4,
-          format_table(edges, list(
-            'value' = color_bar("#A4BAE8"),
-            title = FALSE
-          ), align = c('l', 'l', 'r')) %>%
+          format_table(edges %>% select(from, to, value), list(
+            'value' = color_bar("#E0E0E0")
+          ), align = c('l', 'l', 'r'), col.names = c("From", "To", "Movements")) %>%
             htmltools::HTML() %>%
             div() %>%
             spk_add_deps()

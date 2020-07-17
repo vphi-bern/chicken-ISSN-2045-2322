@@ -218,10 +218,11 @@ comparisonTabItem <- function(input, output, session) {
           endOnTick = FALSE,
           title = list(text = "Chicken")
         ) %>%
-        # hc_tooltip(
-        #   headerFormat = sprintf("<b>%s</b><br>", input$movementsDay),
-        #   pointFormat = "<b>Level</b>: {point.y}<br><b>Hour</b>: {point.x}<br><b>Total</b>: {point.value} mov"
-        # ) %>%
+        hc_tooltip(
+          headerFormat = NULL,
+          pointFormat = "<b>Total</b>: {point.value} sec"
+          # pointFormat = "<b>Level</b>: {point.y}<br><b>Day</b>: {point.x}<br><b>Total</b>: {point.value} sec"
+        ) %>%
         hc_legend(
           layout = "horizontal", align = "right"
         )
@@ -380,7 +381,7 @@ comparisonTabItem <- function(input, output, session) {
       mutate(time = as.numeric(strptime(to, "%Y-%m-%d %H:%M:%S") - strptime(from, "%Y-%m-%d %H:%M:%S"), units = "secs")) %>%
       filter(time > 0 & level %in% input$comparisonCoincidencesLevel)
 
-    format_table(coincidences[,c(1, 2, 4, 3)], list('time' = color_bar("#A4BAE8")), align = c('l', 'l', 'r', 'r')) %>%
+    format_table(coincidences[,c(1, 2, 4, 3)], list('time' = color_bar("#E0E0E0")), align = c('l', 'l', 'r', 'r'), col.names = c("From", "To", "Seconds", "Level")) %>%
       htmltools::HTML() %>%
       div() %>%
       spk_add_deps()
@@ -461,12 +462,38 @@ comparisonTabItem <- function(input, output, session) {
           'L3' = color_bar("#FFCC7F"),
           'L4' = color_bar("#87CA8B"),
           'L5' = color_bar("#B2D47F")
-        ), align = c('l', 'r', 'r', 'r', 'r', 'r', 'c')) %>%
+        ), align = c('l', 'r', 'r', 'r', 'r', 'r', 'c'), col.names = c("Date", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Graph")) %>%
           htmltools::HTML() %>%
           div() %>%
           spk_add_deps()
       ),
 
+      box(width = 4, class = "chickens-plot-height",
+        hchart(allCoincidences, "column", hcaes(x = day, y = total, group = level)) %>%
+          hc_chart(
+            height = 300
+          ) %>%
+          hc_xAxis(
+            labels = list(
+              formatter = JS("function(){return moment(this.value).format('DD-MM');}")
+            ),
+            title = list(text = NULL)
+          ) %>%
+          hc_tooltip(
+            pointFormat = '<span style="color:{point.color}">\u25CF</span> Level {series.name}: <b>{point.y} sec</b><br/>'
+          ) %>%
+          hc_legend(
+            margin = 6
+          ) %>%
+          hc_yAxis(
+            title = list(text = "Seconds")
+          ) %>%
+          hc_colors(unname(levelColorPaletteSparkline[sort(unique(allCoincidences$level))])) %>%
+          hc_plotOptions(
+            column = list(pointPadding = 0, groupPadding = 0)
+          )
+      ),
+      
       box(width = 3,
         highchart(height = 300) %>%
           hc_colors(unname(levelColorPaletteSparkline[coincidencesSummary$level])) %>%
@@ -483,32 +510,6 @@ comparisonTabItem <- function(input, output, session) {
             )
           ) %>%
           hc_add_series(coincidencesSummary, "pie", hcaes(y = total, name = level), name = "Total Time")
-      ),
-
-      box(width = 4, class = "chickens-plot-height",
-        hchart(allCoincidences, "column", hcaes(x = day, y = total, group = level)) %>%
-          hc_chart(
-            height = 300
-          ) %>%
-          hc_xAxis(
-            labels = list(
-              formatter = JS("function(){return moment(this.value).format('DD-MM');}")
-            ),
-            title = list(text = "")
-          ) %>%
-          hc_tooltip(
-            pointFormat = '<span style="color:{point.color}">\u25CF</span> Level {series.name}: <b>{point.y} sec</b><br/>'
-          ) %>%
-          hc_legend(
-            margin = 6
-          ) %>%
-          hc_yAxis(
-            title = list(text = "")
-          ) %>%
-          hc_colors(unname(levelColorPaletteSparkline[sort(unique(allCoincidences$level))])) %>%
-          hc_plotOptions(
-            column = list(pointPadding = 0, groupPadding = 0)
-          )
       ),
 
       box(width = 5, class = "chickens-plot-height",
@@ -583,24 +584,7 @@ comparisonTabItem <- function(input, output, session) {
             summarize(total = sum(time))
           
           column(width = 12, class = "chickens-fix-column-padding",
-             box(width = 3, class = "chickens-plot-height-short", title = chicken_names_c[[i]],
-               highchart(height = 262) %>%
-                 hc_colors(unname(levelColorPaletteSparkline[coincidencesSummary$level])) %>%
-                 hc_tooltip(
-                   headerFormat = '<span style="font-size: 10px"><b>Level</b>: {point.key}</span><br/>',
-                   # pointFormat = '<span style="color:{point.color}">\u25CF</span>{series.name}: <b>{point.y} sec</b>'
-                   valueSuffix = ' sec'
-                 ) %>%
-                 hc_plotOptions(
-                   pie = list(
-                     cursor = 'pointer',
-                     showInLegend = TRUE,
-                     dataLabels = list(enabled = FALSE)
-                   )
-                 ) %>%
-                 hc_add_series(coincidencesSummary, "pie", hcaes(y = total, name = level), name = "Total Time")
-             ),
-             box(width = 4, class = "chickens-plot-height",
+             box(width = 4, class = "chickens-plot-height-short", title = chicken_names_c[[i]],
                hchart(allCoincidences, "column", hcaes(x = day, y = total, group = level)) %>%
                  hc_chart(
                    height = 300
@@ -618,12 +602,29 @@ comparisonTabItem <- function(input, output, session) {
                    margin = 6
                  ) %>%
                  hc_yAxis(
-                   title = list(text = "")
+                   title = list(text = "Seconds")
                  ) %>%
                  hc_colors(unname(levelColorPaletteSparkline[sort(unique(allCoincidences$level))])) %>%
                  hc_plotOptions(
                    column = list(pointPadding = 0, groupPadding = 0)
                  )
+             ),
+             box(width = 3, class = "chickens-plot-height",
+               highchart(height = 262) %>%
+                 hc_colors(unname(levelColorPaletteSparkline[coincidencesSummary$level])) %>%
+                 hc_tooltip(
+                   headerFormat = '<span style="font-size: 10px"><b>Level</b>: {point.key}</span><br/>',
+                   # pointFormat = '<span style="color:{point.color}">\u25CF</span>{series.name}: <b>{point.y} sec</b>'
+                   valueSuffix = ' sec'
+                 ) %>%
+                 hc_plotOptions(
+                   pie = list(
+                     cursor = 'pointer',
+                     showInLegend = TRUE,
+                     dataLabels = list(enabled = FALSE)
+                   )
+                 ) %>%
+                 hc_add_series(coincidencesSummary, "pie", hcaes(y = total, name = level), name = "Total Time")
              ),
              box(width = 5, class = "chickens-plot-height",
                hchart(allCoincidences, "column", hcaes(x = level, y = total, group = day)) %>%
