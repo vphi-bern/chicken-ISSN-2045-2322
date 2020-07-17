@@ -5,7 +5,6 @@ library(shinyWidgets)
 library(highcharter)
 library(dplyr)
 library(xts)
-# library(ggplot2)
 library(purrr)
 library(htmltools)
 library(stringr)
@@ -14,17 +13,35 @@ library(formattable)
 library(sparkline)
 library(lubridate)
 library(visNetwork)
-# library(rChartsCalmap)
 library(viridis)
 
 # library(readr)
+if(!exists('movementsData')) {
+  movementsData <- read.csv2("www/data/movementsData.csv")
+}
 
-movementsData <- read.csv2("www/data/movementsData.csv")
+if(!exists('timeSeriesData')) {
+  timeSeriesData <- read.csv2("www/data/timeSeriesData.csv") %>%
+    mutate(day = format(as.Date(time), "%Y-%m-%d")) 
+}
 
-timeSeriesData <- read.csv2("www/data/timeSeriesData.csv")
-timeSeriesData <- timeSeriesData %>%
-  mutate(day = format(as.Date(time), "%Y-%m-%d")) 
-  # %>% mutate(hour = format(as.POSIXct(time), "%H:%M:%S"))
+# timeSeriesData1 <- timeSeriesData %>% slice(1:190080)
+# timeSeriesData2 <- timeSeriesData %>% slice(190081:380160)
+# timeSeriesData3 <- timeSeriesData %>% slice(380161:570240)
+# timeSeriesData4 <- timeSeriesData %>% slice(570241:760320)
+# timeSeriesData5 <- timeSeriesData %>% slice(760321:950400)
+# 
+# write.csv2(timeSeriesData1, "www/data/timeSeriesData1.csv", row.names = F)
+# write.csv2(timeSeriesData2, "www/data/timeSeriesData2.csv", row.names = F)
+# write.csv2(timeSeriesData3, "www/data/timeSeriesData3.csv", row.names = F)
+# write.csv2(timeSeriesData4, "www/data/timeSeriesData4.csv", row.names = F)
+# write.csv2(timeSeriesData5, "www/data/timeSeriesData5.csv", row.names = F)
+
+# timeSeriesData <- rbind(read.csv2("www/data/timeSeriesData1.csv"), read.csv2("www/data/timeSeriesData2.csv"), read.csv2("www/data/timeSeriesData3.csv"), read.csv2("www/data/timeSeriesData4.csv"), read.csv2("www/data/timeSeriesData5.csv"))
+
+# timeSeriesData <- timeSeriesData %>%
+#   mutate(day = format(as.Date(time), "%Y-%m-%d")) 
+#   # %>% mutate(hour = format(as.POSIXct(time), "%H:%M:%S"))
 
 chicken_number <- c("1", "2", "3", "7", "9", "17", "18", "35", "36", "37", "38", "39", "58")
 
