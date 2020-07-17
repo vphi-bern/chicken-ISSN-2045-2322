@@ -8,6 +8,8 @@ We sought to objectively quantify and compare the recorded movement and location
 Rufener, C., [Berezowski, J.](http://www.vphi.ch/about_us/team/dr_berezowski_john/index_eng.html), [Maximiano Sousa, F.](http://www.vphi.ch/about_us/team/maximiano_alves_de_sousa_filipe_miguel/index_eng.html), Abreu, Y., Asher, L., [Toscano, M.J.](https://www.tierschutz.vetsuisse.unibe.ch/about_us/personnel/dr_toscano_michael_j/index_eng.html), 2018. Finding hens in a haystack: consistency of movement patterns within and across individual laying hens maintained in large groups. Sci. Rep. 8. doi: [10.1038/s41598-018-29962-x](https://doi.org/10.1038/s41598-018-29962-x)
 
 ### About the app
+An online version of this app you can see it [here](https://vphi-bern.shinyapps.io/chickens/).
+
 This app was built using [R](http://www.r-project.org/) and [Shiny](http://shiny.rstudio.com/). All graphs and analysis were made with [dplyr](https://cran.rstudio.com/web/packages/dplyr/index.html), [highcharter](https://cran.r-project.org/web/packages/highcharter/index.html), [sparkline](https://cran.r-project.org/web/packages/sparkline/index.html) and [visNetwork](https://cran.r-project.org/web/packages/visNetwork/index.html) packages.
 
 ### How to run it
